@@ -200,7 +200,7 @@ contract PearzapPair is IPearzapPair, PearzapERC20 {
         uint _swapFee = swapFee;
         uint balance0Adjusted = (balance0.mul(10000).sub(amount0In.mul(_swapFee)));
         uint balance1Adjusted = (balance1.mul(10000).sub(amount1In.mul(_swapFee)));
-        require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'PearzapSwap: K');
+        require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(10000**2), 'PearzapSwap: K');
         }
 
         _update(balance0, balance1, _reserve0, _reserve1);

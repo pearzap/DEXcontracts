@@ -338,7 +338,7 @@ contract PearzapRouter is IPearzapRouter02 {
             (uint reserve0, uint reserve1,) = pair.getReserves();
             (uint reserveInput, uint reserveOutput) = input == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
             amountInput = IERC20(input).balanceOf(address(pair)).sub(reserveInput);
-            amountOutput = PearzapLibrary.getAmountOut(amountInput, reserveInput, reserveOutput);
+            amountOutput = PearzapLibrary.getAmountOut(amountInput, reserveInput, reserveOutput, pair.swapFee());
             }
             (uint amount0Out, uint amount1Out) = input == token0 ? (uint(0), amountOutput) : (amountOutput, uint(0));
             address to = i < path.length - 2 ? PearzapLibrary.pairFor(factory, output, path[i + 2]) : _to;
@@ -413,24 +413,24 @@ contract PearzapRouter is IPearzapRouter02 {
         return PearzapLibrary.quote(amountA, reserveA, reserveB);
     }
 
-    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut)
+    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut, uint swapFee)
         public
         pure
         virtual
         override
         returns (uint amountOut)
     {
-        return PearzapLibrary.getAmountOut(amountIn, reserveIn, reserveOut);
+        return PearzapLibrary.getAmountOut(amountIn, reserveIn, reserveOut, swapFee);
     }
 
-    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut)
+    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut, uint swapFee)
         public
         pure
         virtual
         override
         returns (uint amountIn)
     {
-        return PearzapLibrary.getAmountIn(amountOut, reserveIn, reserveOut);
+        return PearzapLibrary.getAmountIn(amountOut, reserveIn, reserveOut, swapFee);
     }
 
     function getAmountsOut(uint amountIn, address[] memory path)
