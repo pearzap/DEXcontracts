@@ -23,4 +23,5 @@ interface IPearzapFactory {
 
     function setFeeTo(address) external;
     function setFeeToSetter(address) external;
+    function setSwapFee(address pair, uint32 swapFee) external;
 }
