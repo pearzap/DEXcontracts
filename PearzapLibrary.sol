@@ -33,10 +33,13 @@ library PearzapLibrary {
         ))));
     }
 
+    function getSwapFee(address factory, address tokenA, address tokenB) internal view returns (uint swapFee) {
+        swapFee = IPearzapPair(pairFor(factory, tokenA, tokenB)).swapFee();
+    }
+
     // fetches and sorts the reserves for a pair
     function getReserves(address factory, address tokenA, address tokenB) internal view returns (uint reserveA, uint reserveB) {
         (address token0,) = sortTokens(tokenA, tokenB);
-        pairFor(factory, tokenA, tokenB);
         (uint reserve0, uint reserve1,) = IPearzapPair(pairFor(factory, tokenA, tokenB)).getReserves();
         (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
     }
@@ -49,21 +52,21 @@ library PearzapLibrary {
     }
 
     // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
-    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) internal pure returns (uint amountOut) {
+    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut, uint swapFee) internal pure returns (uint amountOut) {
         require(amountIn > 0, 'PearzapLibrary: INSUFFICIENT_INPUT_AMOUNT');
         require(reserveIn > 0 && reserveOut > 0, 'PearzapLibrary: INSUFFICIENT_LIQUIDITY');
-        uint amountInWithFee = amountIn.mul(998);
+        uint amountInWithFee = amountIn.mul(uint(10000).sub(swapFee));
         uint numerator = amountInWithFee.mul(reserveOut);
-        uint denominator = reserveIn.mul(1000).add(amountInWithFee);
+        uint denominator = reserveIn.mul(10000).add(amountInWithFee);
         amountOut = numerator / denominator;
     }
 
     // given an output amount of an asset and pair reserves, returns a required input amount of the other asset
-    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) internal pure returns (uint amountIn) {
+    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut, uint swapFee) internal pure returns (uint amountIn) {
         require(amountOut > 0, 'PearzapLibrary: INSUFFICIENT_OUTPUT_AMOUNT');
         require(reserveIn > 0 && reserveOut > 0, 'PearzapLibrary: INSUFFICIENT_LIQUIDITY');
-        uint numerator = reserveIn.mul(amountOut).mul(1000);
-        uint denominator = reserveOut.sub(amountOut).mul(998);
+        uint numerator = reserveIn.mul(amountOut).mul(10000);
+        uint denominator = reserveOut.sub(amountOut).mul(uint(10000).sub(swapFee));
         amountIn = (numerator / denominator).add(1);
     }
 
@@ -74,7 +77,7 @@ library PearzapLibrary {
         amounts[0] = amountIn;
         for (uint i; i < path.length - 1; i++) {
             (uint reserveIn, uint reserveOut) = getReserves(factory, path[i], path[i + 1]);
-            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut);
+            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut, getSwapFee(factory, path[i], path[i + 1]));
         }
     }
 
@@ -85,7 +88,7 @@ library PearzapLibrary {
         amounts[amounts.length - 1] = amountOut;
         for (uint i = path.length - 1; i > 0; i--) {
             (uint reserveIn, uint reserveOut) = getReserves(factory, path[i - 1], path[i]);
-            amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut);
+            amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut, getSwapFee(factory, path[i - 1], path[i]));
         }
     }
 }
